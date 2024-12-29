@@ -1,0 +1,5 @@
+[
+    "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
+    "com.google.code.gson:gson:2.8.9",
+    "org.apache.commons:commons-lang3:3.12.0"
+]
