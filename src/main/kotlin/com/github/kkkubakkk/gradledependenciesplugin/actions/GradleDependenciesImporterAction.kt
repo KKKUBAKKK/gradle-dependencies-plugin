@@ -11,6 +11,7 @@ import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.vfs.VirtualFile
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.intellij.openapi.actionSystem.Presentation
 
 class GradleDependenciesImporterAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
@@ -20,11 +21,21 @@ class GradleDependenciesImporterAction : AnAction() {
 
         val dependencies = readDependenciesFromFile(virtualFile)
         if (dependencies.isNotEmpty()) {
-            addDependenciesToBuildFile(project, dependencies)
-            Messages.showInfoMessage(project, "Dependencies imported successfully.", "Success")
+            val res = addDependenciesToBuildFile(project, dependencies)
+            if (res == 0)
+                Messages.showInfoMessage(project, "Dependencies imported successfully.", "Success")
+            else
+                Messages.showErrorDialog(project, "Error occurred while importing dependencies.", "Error")
         } else {
             Messages.showErrorDialog(project, "No dependencies found in the file.", "Error")
         }
+    }
+
+    override fun update(e: AnActionEvent) {
+        val project = e.project
+        val presentation: Presentation = e.presentation
+        val buildFile = project?.projectFile?.findChild("build.gradle")
+        presentation.isEnabledAndVisible = buildFile != null
     }
 
     private fun readDependenciesFromFile(file: VirtualFile): List<String> {
@@ -34,8 +45,8 @@ class GradleDependenciesImporterAction : AnAction() {
         return gson.fromJson(content, type)
     }
 
-    private fun addDependenciesToBuildFile(project: Project, dependencies: List<String>) {
-        val buildFile = project.projectFile?.findChild("build.gradle.kts") ?: return    // TODO: Support for java projects (this is only for kotlin projects)
+    private fun addDependenciesToBuildFile(project: Project, dependencies: List<String>): Int {
+        val buildFile = project.projectFile?.findChild("build.gradle") ?: return 1
         WriteCommandAction.runWriteCommandAction(project) {
             val document = FileDocumentManager.getInstance().getDocument(buildFile) ?: return@runWriteCommandAction
             val newContent = buildString {
@@ -45,5 +56,20 @@ class GradleDependenciesImporterAction : AnAction() {
             }
             document.setText(newContent)
         }
+        
+        return 0
     }
+    
+//    private fun addDependenciesToBuildFile(project: Project, dependencies: List<String>) {
+//        val buildFile = project.projectFile?.findChild("build.gradle.kts") ?: return    // TODO: Support for java projects (this is only for kotlin projects)
+//        WriteCommandAction.runWriteCommandAction(project) {
+//            val document = FileDocumentManager.getInstance().getDocument(buildFile) ?: return@runWriteCommandAction
+//            val newContent = buildString {
+//                append(document.text)
+//                append("\n")
+//                dependencies.forEach { append("implementation(\"$it\")\n") }
+//            }
+//            document.setText(newContent)
+//        }
+//    }
 }

@@ -28,7 +28,10 @@
     </extensions>
     
     <actions>
-        <action id="GradleDependenciesImporter" class="com.github.kkkubakkk.gradledependenciesplugin.actions.GradleDependenciesImporterAction" text="Import Gradle Dependencies" description="Import Gradle dependencies to your project from an external text file.">
+        <action id="GradleDependenciesImporter" 
+                class="com.github.kkkubakkk.gradledependenciesplugin.actions.GradleDependenciesImporterAction" 
+                text="Import Gradle Dependencies" 
+                description="Import Gradle dependencies to your project from an external text file.">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
     </actions>
