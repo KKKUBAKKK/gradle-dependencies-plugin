@@ -20,10 +20,6 @@ intellij {
     plugins.set(listOf(/* Plugin Dependencies */))
 }
 
-//dependencies {
-//    implementation("com.google.code.gson:gson:2.10.1")
-//}
-
 tasks {
     // Set the JVM compatibility versions
     withType<JavaCompile> {
