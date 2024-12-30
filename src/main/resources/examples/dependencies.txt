@@ -1,5 +1,16 @@
-[
-    "org.jetbrains.kotlin:kotlin-stdlib:1.9.25",
-    "com.google.code.gson:gson:2.8.9",
-    "org.apache.commons:commons-lang3:3.12.0"
-]
+{
+  "dependencies": [
+    {
+      "configuration": "implementation",
+      "group": "org.jetbrains.kotlinx",
+      "name": "kotlinx-coroutines-core",
+      "version": "1.7.3"
+    },
+    {
+      "configuration": "testImplementation",
+      "group": "org.jetbrains.kotlin",
+      "name": "kotlin-test-junit5",
+      "version": "1.9.21"
+    }
+  ]
+}
