@@ -15,61 +15,76 @@ import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import com.intellij.openapi.actionSystem.ActionUpdateThread
+import com.intellij.openapi.project.guessProjectDir
 import io.ktor.utils.io.errors.*
 
 class GradleDependenciesImporterAction : AnAction() {
     override fun update(e: AnActionEvent) {
         val project = e.project
         if (project == null) {
-            e.presentation.isEnabledAndVisible = false
+            e.presentation.isEnabled = false
+            e.presentation.isVisible = true
             return
         }
-        
+
         val buildFile = findBuildFile(project)
-        e.presentation.isEnabledAndVisible = buildFile != null
+        e.presentation.isEnabled = buildFile != null
+        e.presentation.isVisible = true
     }
 
     override fun getActionUpdateThread(): ActionUpdateThread {
         return ActionUpdateThread.BGT
     }
-    
+
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-        
+
         val descriptor = FileChooserDescriptor(true, false, false, false, false, false)
             .withFileFilter { it.name.endsWith(".txt") }
             .withTitle("Select Dependencies File")
             .withDescription("Select a .txt file with dependencies in JSON format")
-        
+
         try {
             val jsonFile = FileChooser.chooseFile(descriptor, project, null)
             if (jsonFile == null) {
                 Messages.showMessageDialog(project, "No file selected", "Error", Messages.getErrorIcon())
                 return
             }
-            
+
             val jsonContent = jsonFile.inputStream.bufferedReader().use { it.readText() }
-            
+
             try {
                 val dependencies = parseDependencies(jsonContent)
                 val buildFile = findBuildFile(project) ?: throw IOException("Build file not found")
                 updateBuildFile(project, buildFile, dependencies)
                 Messages.showInfoMessage(project, "Dependencies successfully imported", "Success")
             } catch (e: JsonSyntaxException) {
-                Messages.showMessageDialog(project, "Invalid JSON format: ${e.message}", "Error", Messages.getErrorIcon())
+                Messages.showMessageDialog(
+                    project,
+                    "Invalid JSON format: ${e.message}",
+                    "Error",
+                    Messages.getErrorIcon()
+                )
             }
         } catch (e: IOException) {
             Messages.showMessageDialog(project, "Error reading file: ${e.message}", "Error", Messages.getErrorIcon())
         } catch (e: Exception) {
-            Messages.showMessageDialog(project, "Unexpected error occurred: ${e.message}", "Error", Messages.getErrorIcon())
+            Messages.showMessageDialog(
+                project,
+                "Unexpected error occurred: ${e.message}",
+                "Error",
+                Messages.getErrorIcon()
+            )
         }
     }
 
-    private fun parseDependencies(jsonContent: String): Dependencies = 
+    private fun parseDependencies(jsonContent: String): Dependencies =
         Gson().fromJson(jsonContent, object : TypeToken<Dependencies>() {}.type)
-    
-    private fun findBuildFile(project: Project): VirtualFile? = 
-        project.baseDir.findChild("build.gradle.kts") ?: project.baseDir.findChild("build.gradle")
+
+    private fun findBuildFile(project: Project): VirtualFile? {
+        val projectDir = project.guessProjectDir() ?: return null
+        return projectDir.findChild("build.gradle.kts") ?: projectDir.findChild("build.gradle")
+    }
     
     private fun updateBuildFile(project: Project, buildFile: VirtualFile?, dependencies: Dependencies) {
         if (buildFile == null) {
